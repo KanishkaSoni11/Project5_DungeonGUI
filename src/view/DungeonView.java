@@ -18,7 +18,6 @@ public interface DungeonView {
 
   void addKeyListener(KeyListener listener);
 
-  void move();
 
   void addActionListener(ActionListener actionListener);
 
@@ -51,6 +50,8 @@ public interface DungeonView {
   int getNumberOfMonsters();
 
   void showPlayerDesc();
+
+  //void getController(IDungeonController controller);
 
 
 }

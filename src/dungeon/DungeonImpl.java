@@ -608,6 +608,7 @@ public class DungeonImpl implements Dungeon {
 
   @Override
   public String maze(String move) throws IllegalArgumentException {
+    System.out.println("move" +  move);
     if (move == null) {
       throw new IllegalArgumentException("Move cannot be null");
     }
@@ -626,6 +627,7 @@ public class DungeonImpl implements Dungeon {
         correctMove = player.move(Direction.WEST);
 
       } else {
+
         throw new IllegalArgumentException("The entered direction was invalid");
       }
 

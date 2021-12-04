@@ -45,6 +45,8 @@ public class DungeonGridView extends JFrame implements DungeonView {
   private JTextField wrappingText;
   private JTextField treasurePercentText;
   private JTextField numberOfMonstersText;
+  private IDungeonController controller;
+
 
 
   private JButton shootButton;
@@ -68,7 +70,8 @@ public class DungeonGridView extends JFrame implements DungeonView {
     dungeonPanel = new DungeonPanel(model);
     dungeonPanel.setPreferredSize(new Dimension(500, 500));
 
-    dungeonPanel.setDungeonPanel();
+   // dungeonPanel.setDungeonPanel();
+    dungeonPanel.showCaveDetails();
     jScrollPane = new JScrollPane(dungeonPanel);
     this.add(BorderLayout.CENTER, jScrollPane);
     moveLabel = new JLabel();
@@ -79,7 +82,6 @@ public class DungeonGridView extends JFrame implements DungeonView {
     locationDescLabel.setPreferredSize(new Dimension(700, 200));
     this.add(BorderLayout.PAGE_END, locationDescLabel);
 
-    showDungeon();
     resetFocus();
     this.pack();
   }
@@ -200,11 +202,7 @@ public class DungeonGridView extends JFrame implements DungeonView {
 
   @Override
   public void showDungeon() {
-    dungeonPanel.showCaveDetails();
-  }
 
-  @Override
-  public void move() {
     dungeonPanel.showCaveDetails();
   }
 
@@ -213,7 +211,6 @@ public class DungeonGridView extends JFrame implements DungeonView {
     this.setFocusable(true);
     this.requestFocus();
   }
-
 
   @Override
   public void refresh() {
@@ -323,16 +320,18 @@ public class DungeonGridView extends JFrame implements DungeonView {
 
   @Override
   public void addClickListener(IDungeonController listener) {
+
     System.out.println("Calling adapter");
     MouseAdapter clickAdapter = new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
-        System.out.println("1Calling listener");
         super.mouseClicked(e);
         System.out.println("2Calling listener");
         dungeonPanel.addClickListenerDungeon(listener);
       }
     };
+    System.out.println("calling click adap");
     dungeonPanel.addMouseListener(clickAdapter);
   }
+
 }

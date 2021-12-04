@@ -158,6 +158,8 @@ public class DungeonController implements IDungeonController, ActionListener {
     view.makeVisible();
   }
 
+
+
   private void configureKeyBoardListener() {
 
     Map<Character, Runnable> keyTypes = new HashMap<>();
@@ -444,7 +446,6 @@ public class DungeonController implements IDungeonController, ActionListener {
 
     buttonListener.setButtonClickedActionMap(buttonClickedMap);
     view.addActionListener(buttonListener);
-
     view.resetFocus();
   }
 
@@ -456,6 +457,7 @@ public class DungeonController implements IDungeonController, ActionListener {
     view.setString(move);
     view.showDungeon();
     view.resetFocus();
+
   }
 
   @Override
