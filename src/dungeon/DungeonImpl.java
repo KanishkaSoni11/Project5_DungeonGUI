@@ -2,7 +2,6 @@ package dungeon;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -26,20 +25,22 @@ import randomiser.Randomiser;
 public class DungeonImpl implements Dungeon {
   private Location start;
   private Location end;
-  private final List<Location> listOfCaves;
+  private List<Location> listOfCaves;
   private final int interconnectivity;
   private final int rows;
   private final int columns;
   private final Player player;
   private final boolean wrapping;
-  private final List<Edge> edge;
+  private List<Edge> edge;
   private List<Edge> mstList;
   private final Randomiser randomiser;
   private final int finalPercent;
   private final int numberOfMonsters;
   private int movingMonsterCaveId;
   private boolean movingMonsterIsAlive;
-  private float treasurePercent;
+  private final float treasurePercent;
+  private ArrayList<Location> cavesFinalList;
+  private Dungeon dungeonCopy;
 
 
   /**
@@ -87,6 +88,7 @@ public class DungeonImpl implements Dungeon {
     this.wrapping = wrapping;
     this.randomiser = randomiser;
     this.numberOfMonsters = numberOfMonsters;
+    this.treasurePercent = treasurePercent;
     this.listOfCaves = new ArrayList<Location>();
     this.edge = new ArrayList<Edge>();
     this.mstList = new ArrayList<Edge>();
@@ -94,6 +96,7 @@ public class DungeonImpl implements Dungeon {
             + randomiser.getRandom(0, (int) (100 - treasurePercent)));
     this.movingMonsterCaveId = 0;
     this.movingMonsterIsAlive = true;
+    this.cavesFinalList = new ArrayList<>();
     createDungeon();
     createListOfCaves();
     addAdjacentCaves();
@@ -102,8 +105,54 @@ public class DungeonImpl implements Dungeon {
     putArrows();
     putMonster();
     putPit();
-    putTheif();
+    putThief();
+    createCavesFinalList();
     player = new PlayerImp("John", start);
+    makeDungeonCopy();
+  }
+
+  public DungeonImpl(ReadOnlyDungeonModel dungeon) {
+
+    this.rows = dungeon.getRow();
+    this.columns = dungeon.getColumns();
+    this.interconnectivity = dungeon.getInterconnectivity();
+    this.wrapping = dungeon.getWrapping();
+    this.randomiser = dungeon.getRandomiser();
+    this.numberOfMonsters = dungeon.getNumberOfMonsters();
+    this.treasurePercent = dungeon.getTreasurePercent();
+    this.finalPercent = dungeon.getFinalPercent();
+    this.cavesFinalList = dungeon.getCaveFinalList();
+    this.listOfCaves = dungeon.getListOfCaves();
+    this.movingMonsterCaveId = 0;
+    this.movingMonsterIsAlive = true;
+
+    for (int i = 0; i < cavesFinalList.size(); i++) {
+      this.listOfCaves.get(i).addArrow(dungeon.getCaveFinalList().get(i).getArrow());
+      for (int j = 0; j < dungeon.getCaveFinalList().get(i).getTreasureList().size(); j++) {
+        this.listOfCaves.get(i).addTreasureToCave(dungeon.getCaveFinalList().get(i).getTreasureList().get(j));
+      }
+      if (this.cavesFinalList.get(i).hasMonster()) {
+        this.listOfCaves.get(i).addMonster();
+      }
+
+      if (this.cavesFinalList.get(i).getThief()) {
+        this.listOfCaves.get(i).addThief();
+      }
+
+      if (this.cavesFinalList.get(i).hasMovingMonster()) {
+        this.listOfCaves.get(i).addMovingMonster();
+      }
+    }
+
+    for (int i = 0; i < cavesFinalList.size(); i++) {
+      if (dungeon.getStart().getCaveId() == i) {
+        this.start = listOfCaves.get(i);
+      } else if (dungeon.getEnd().getCaveId() == i) {
+        this.end = listOfCaves.get(i);
+      }
+    }
+    this.player = new PlayerImp("John", this.start);
+
   }
 
   @Override
@@ -123,7 +172,7 @@ public class DungeonImpl implements Dungeon {
 
   @Override
   public List<Location> getListOfCaves() {
-    return new ArrayList<Location>(listOfCaves);
+    return new ArrayList<>(this.listOfCaves);
   }
 
   @Override
@@ -165,13 +214,39 @@ public class DungeonImpl implements Dungeon {
     return this.treasurePercent;
   }
 
+  @Override
+  public List<Edge> getEdge() {
+    return new ArrayList<>(this.edge);
+  }
 
+  @Override
+  public List<Edge> getMstList() {
+    return new ArrayList<>(this.mstList);
+  }
+
+  @Override
+  public int getFinalPercent() {
+    return this.finalPercent;
+  }
+
+  public void makeDungeonCopy() {
+    dungeonCopy = new DungeonImpl(this);
+  }
+
+  @Override
+  public Dungeon getDungeonCopy() {
+    return new DungeonImpl(dungeonCopy);
+  }
+
+  @Override
+  public ArrayList<Location> getCaveFinalList() {
+//    for (int i = 0; i < cavesFinalList.size(); i++) {
+//      System.out.println(cavesFinalList.get(i));
 //
-//  public void resetDungeon(int rows, int columns, int interconnectivity, boolean wrapping,
-//                           float treasurePercent, Randomiser randomiser, int numberOfMonsters) {
-//    rows = rows;
-//
-//  }
+//    }
+    return new ArrayList<>(cavesFinalList);
+  }
+
 
   @Override
   public String playerToPickArrow() {
@@ -297,7 +372,6 @@ public class DungeonImpl implements Dungeon {
         listOfCavesCopy.add(listOfCaves.get(i));
       }
     }
-
     randomiser.shuffle(listOfCavesCopy);
     int loopNum = (int) (finalPercent * (listOfCavesCopy.size() / 100.0));
     for (int i = 0; i < loopNum; i++) {
@@ -387,7 +461,8 @@ public class DungeonImpl implements Dungeon {
     return false;
   }
 
-  public void putPit() {
+
+  private void putPit() {
     List<Location> listOfCavesCopy = new ArrayList<Location>();
 
     for (Location listOfCave : listOfCaves) {
@@ -402,13 +477,17 @@ public class DungeonImpl implements Dungeon {
     for (int i = 0; i < listOfCavesCopy.size(); i++) {
       if (!listOfCavesCopy.get(i).hasMonster()) {
         listOfCavesCopy.get(i).setPit();
-       // System.out.println("Adding to listOfCavesCopy.get(i)" + listOfCavesCopy.get(i).getCaveId());
         break;
       }
     }
   }
 
-  public void putTheif() {
+  @Override
+  public Randomiser getRandomiser() {
+    return this.randomiser;
+  }
+
+  private void putThief() {
     List<Location> listOfCavesCopy = new ArrayList<Location>();
 
     for (Location listOfCave : listOfCaves) {
@@ -423,12 +502,12 @@ public class DungeonImpl implements Dungeon {
     for (int i = 0; i < listOfCavesCopy.size(); i++) {
       if (!listOfCavesCopy.get(i).hasMonster() && !listOfCavesCopy.get(i).getPit()) {
         listOfCavesCopy.get(i).addThief();
-        //System.out.println("Adding thief listOfCavesCopy.get(i)" + listOfCavesCopy.get(i).getCaveId());
         break;
       }
     }
   }
 
+  @Override
   public boolean getPit(Location cave) {
     for (Map.Entry<Direction, Location> set : cave.getCaveList().entrySet()) {
       if (set.getValue().getPit()) {
@@ -454,9 +533,7 @@ public class DungeonImpl implements Dungeon {
     while (queue.size() != 0) {
       src = queue.poll();
 
-      Iterator<Location> i = new ArrayList<Location>(src.getCaveList().values()).listIterator();
-      while (i.hasNext()) {
-        Location n = i.next();
+      for (Location n : new ArrayList<Location>(src.getCaveList().values())) {
         if (!n.isVisited()) {
           n.updateVisit(true);
           queue.add(n);
@@ -490,11 +567,10 @@ public class DungeonImpl implements Dungeon {
       this.end = null;
 
       for (Location j : level.keySet()) {
-        Location key = j;
         int value = level.get(j);
 
-        if (value >= 5 && key.getLocationType() != LocationType.TUNNEL) {
-          this.end = key;
+        if (value >= 5 && j.getLocationType() != LocationType.TUNNEL) {
+          this.end = j;
           break;
         }
       }
@@ -608,7 +684,6 @@ public class DungeonImpl implements Dungeon {
 
   @Override
   public String maze(String move) throws IllegalArgumentException {
-    System.out.println("move" +  move);
     if (move == null) {
       throw new IllegalArgumentException("Move cannot be null");
     }
@@ -676,7 +751,6 @@ public class DungeonImpl implements Dungeon {
     }
     randomiser.shuffle(listOfCavesMonster);
     movingMonsterCaveId = randomiser.getRandom(0, listOfCavesMonster.size() - 1);
-  //  System.out.println("Adding MM to " + listOfCavesMonster.get(movingMonsterCaveId).getCaveId());
     listOfCavesMonster.get(movingMonsterCaveId).addMovingMonster();
     movingMonsterCaveId = listOfCavesMonster.get(movingMonsterCaveId).getCaveId();
 
@@ -740,6 +814,17 @@ public class DungeonImpl implements Dungeon {
       sb.append("There are no treasures here").append("\n");
     }
     return sb.toString();
+  }
+
+  public void createCavesFinalList() {
+    for (Location listOfCave : listOfCaves) {
+      cavesFinalList.add(new Cave(listOfCave));
+    }
+//    for (int i = 0; i < cavesFinalList.size(); i++) {
+//      if (start.getCaveId() == cavesFinalList.get(i).getCaveId()) {
+//
+//      }
+//    }
   }
 
   @Override

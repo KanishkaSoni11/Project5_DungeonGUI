@@ -22,6 +22,7 @@ public class FixedRandomiser implements Randomiser {
     this.index = 0;
   }
 
+
   @Override
   public int getRandom(int min, int max) {
     int val = arr[index++];

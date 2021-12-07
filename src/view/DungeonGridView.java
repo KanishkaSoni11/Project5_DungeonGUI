@@ -76,12 +76,12 @@ public class DungeonGridView extends JFrame implements DungeonView {
     this.add(BorderLayout.CENTER, jScrollPane);
     moveLabel = new JLabel();
     moveLabel.setPreferredSize(new Dimension(500, 100));
-    dungeonPanel.add(BorderLayout.PAGE_END, moveLabel);
+    dungeonPanel.add(BorderLayout.PAGE_START, moveLabel);
 
     locationDescLabel = new JLabel("", SwingConstants.CENTER);
     locationDescLabel.setPreferredSize(new Dimension(700, 200));
     this.add(BorderLayout.PAGE_END, locationDescLabel);
-
+    setString(model.getPlayerDesc());
     resetFocus();
     this.pack();
   }
@@ -196,7 +196,6 @@ public class DungeonGridView extends JFrame implements DungeonView {
 
   @Override
   public void showErrorMessage(String error) {
-    System.out.println("Error: " + error);
     JOptionPane.showMessageDialog(this, error, "Error", JOptionPane.ERROR_MESSAGE);
   }
 
@@ -321,16 +320,13 @@ public class DungeonGridView extends JFrame implements DungeonView {
   @Override
   public void addClickListener(IDungeonController listener) {
 
-    System.out.println("Calling adapter");
     MouseAdapter clickAdapter = new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
         super.mouseClicked(e);
-        System.out.println("2Calling listener");
         dungeonPanel.addClickListenerDungeon(listener);
       }
     };
-    System.out.println("calling click adap");
     dungeonPanel.addMouseListener(clickAdapter);
   }
 

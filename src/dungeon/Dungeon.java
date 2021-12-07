@@ -1,5 +1,6 @@
 package dungeon;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -7,6 +8,7 @@ import location.Direction;
 import location.Location;
 import location.Smell;
 import player.Player;
+import randomiser.Randomiser;
 
 /**
  * Dungeon is the representation of Dungeon maze model where the dungeon is formed based on
@@ -15,7 +17,6 @@ import player.Player;
  */
 
 public interface Dungeon extends ReadOnlyDungeonModel{
-
 
 
   /**
@@ -61,15 +62,6 @@ public interface Dungeon extends ReadOnlyDungeonModel{
    */
   String getDungeon();
 
-  /**
-   * Method to get the end cave of the maze.
-   *
-   * @return end cave
-   */
-  Location getEnd();
-
-
-
 
 
   /**
@@ -100,12 +92,6 @@ public interface Dungeon extends ReadOnlyDungeonModel{
    * @return String representation of treasure in the cave
    */
   String treasureDesc();
-
-
-
-  void putPit();
-
-
 
 
 

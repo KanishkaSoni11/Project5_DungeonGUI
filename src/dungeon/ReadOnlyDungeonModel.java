@@ -1,10 +1,12 @@
 package dungeon;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import location.Location;
 import location.Smell;
 import player.Player;
+import randomiser.Randomiser;
 
 public interface ReadOnlyDungeonModel {
 
@@ -71,5 +73,24 @@ public interface ReadOnlyDungeonModel {
   String getPlayerDesc();
 
   String getLocationDesc();
+
+  Randomiser getRandomiser();
+
+  List<Edge> getEdge();
+
+  List<Edge> getMstList();
+
+  int getFinalPercent();
+
+  Dungeon getDungeonCopy();
+
+  ArrayList<Location> getCaveFinalList() ;
+
+  /**
+   * Method to get the end cave of the maze.
+   *
+   * @return end cave
+   */
+  Location getEnd();
 
 }

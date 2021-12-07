@@ -54,8 +54,9 @@ public class PlayerImp implements Player {
       throw new IllegalArgumentException("Player cannot be null.");
     }
     this.name = player.getName();
-    playerTreasureList = player.getTreasureList();
-    this.cave = player.getCurrentCave();
+    this.playerTreasureList = player.getTreasureList();
+    this.cave = player.getStartCave();
+    System.out.println("Player " + player.getStartCave());
     this.playerAlive = player.getPlayerLive();
     this.arrowsWithPlayers = player.getArrowCount();
     this.health = player.getHealth();
@@ -68,7 +69,7 @@ public class PlayerImp implements Player {
 
   @Override
   public Location getCurrentCave() {
-    return new Cave(cave);
+    return new Cave(this.cave);
   }
 
   @Override
@@ -114,6 +115,8 @@ public class PlayerImp implements Player {
   public void pickArrow() {
     this.arrowsWithPlayers = this.arrowsWithPlayers + this.getCurrentCave().getArrow();
     this.cave.removeArrow();
+    System.out.println("Playerrr" + this.cave.getArrow());
+    System.out.println("Caveee" + this.getCurrentCave());
   }
 
   @Override
@@ -146,6 +149,19 @@ public class PlayerImp implements Player {
     if (this.health > 0) {
       health = health - 50;
     }
+  }
+
+  @Override
+  public Location getStartCave() {
+    return new Cave(this.cave);
+  }
+
+  @Override
+  public void resetPlayer() {
+    this.playerTreasureList.clear();
+    this.playerAlive = true;
+    this.arrowsWithPlayers = 3;
+    this.health = 100;
   }
 
 

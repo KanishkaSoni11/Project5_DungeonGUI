@@ -12,10 +12,10 @@ import java.util.TreeMap;
  */
 public class Cave implements Location {
 
-  private Map<Direction, Location> caveList;
+  private final Map<Direction, Location> caveList;
   private List<Treasure> treasureList;
   private boolean visited;
-  private int caveId;
+  private final int caveId;
   private int arrows;
   private CaveCreature monster;
   private boolean hasPit;
@@ -53,8 +53,8 @@ public class Cave implements Location {
     if (cave == null) {
       throw new IllegalArgumentException("Cave cannot be null.");
     }
-    caveList = cave.getCaveList();
-    treasureList = cave.getTreasureList();
+    this.caveList = cave.getCaveList();
+    this.treasureList = cave.getTreasureList();
     this.caveId = cave.getCaveId();
     this.visited = cave.isVisited();
     this.monster = cave.getMonster();
@@ -113,7 +113,6 @@ public class Cave implements Location {
     return visited;
   }
 
-
   @Override
   public int getCaveId() {
     return caveId;
@@ -137,7 +136,9 @@ public class Cave implements Location {
 
   @Override
   public void removeArrow() {
+    System.out.println("Removing");
     this.arrows = 0;
+    System.out.println("number " + arrows);
   }
 
   @Override
@@ -153,8 +154,7 @@ public class Cave implements Location {
   @Override
   public CaveCreature getMonster() {
     if (this.hasMonster()) {
-      CaveCreature monster1 = new Monster(monster);
-      return monster1;
+      return new Monster(monster);
     }
     return null;
   }
@@ -197,10 +197,6 @@ public class Cave implements Location {
       return new MovingMonster(movingMonster);
     }
     return null;
-//    if (this.hasMovingMonster()) {
-//      return movingMonster;
-//    }
-//    return null;
   }
 
   @Override

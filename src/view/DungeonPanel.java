@@ -12,13 +12,8 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.text.IconView;
 
-import control.DungeonCommandController;
-import control.DungeonController;
 import control.IDungeonController;
-import control.command.Move;
-import dungeon.Dungeon;
 import dungeon.ReadOnlyDungeonModel;
 import location.Direction;
 import location.Location;
@@ -35,7 +30,6 @@ public class DungeonPanel extends JPanel {
   private BufferedImage myPicture;
   private String image;
   private Map<Integer, Boolean> isVisited;
-  private Map<Integer, JLabel> neighbourList;
   private DungeonView view;
 
 
@@ -44,20 +38,17 @@ public class DungeonPanel extends JPanel {
     this.row = model.getRow();
     this.col = model.getColumns();
     this.model = model;
-     jPanel = new JPanel();
-//    jPanel.setLayout(new GridLayout(row, col));
-//    jPanel.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+    jPanel = new JPanel();
     isVisited = new HashMap<>();
     arr = new HashMap<>();
-    neighbourList = new HashMap<>();
-      this.add(jPanel);
+    this.add(jPanel);
+    setDungeonPanel();
 
     for (int i = 0; i < row * col; i++) {
       isVisited.put(i, false);
     }
 
   }
-
 
   public void setDungeonPanel() {
     for (int i = 0; i < row * col; i++) {
@@ -76,66 +67,69 @@ public class DungeonPanel extends JPanel {
   }
 
 
-
   public void showCaveDetails() {
+    System.out.println("Calling show cave details");
     this.remove(jPanel);
     jPanel = new JPanel();
     jPanel.setLayout(new GridLayout(row, col));
     jPanel.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
     arr.clear();
-    System.out.println("Show cave details");
+
     isVisited.put(model.getPlayer().getCurrentCave().getCaveId(), true);
 
-    for (int i = 0; i < row * col; i++) {
-      JLabel jLabel = new JLabel();
-      if (isVisited.get(i)) {
-        String image = "";
-        if (model.getListOfCaves().get(i).getCaveList().containsKey(Direction.NORTH)) {
+    for (Map.Entry<Integer, Boolean> set : isVisited.entrySet()) {
+      jLabel = new JLabel();
+      if (isVisited.get(set.getKey())) {
+        jLabel.setIcon(null);
+        image = "";
+        if (model.getListOfCaves().get(set.getKey()).getCaveList().containsKey(Direction.NORTH)) {
           image = image + "N";
         }
 
-        if (model.getListOfCaves().get(i).getCaveList().containsKey(Direction.EAST)) {
+        if (model.getListOfCaves().get(set.getKey()).getCaveList().containsKey(Direction.EAST)) {
           image = image + "E";
         }
-        if (model.getListOfCaves().get(i).getCaveList().containsKey(Direction.SOUTH)) {
+        if (model.getListOfCaves().get(set.getKey()).getCaveList().containsKey(Direction.SOUTH)) {
           image = image + "S";
         }
 
-        if (model.getListOfCaves().get(i).getCaveList().containsKey(Direction.WEST)) {
+        if (model.getListOfCaves().get(set.getKey()).getCaveList().containsKey(Direction.WEST)) {
           image = image + "W";
         }
+
         image = "img/" + image + ".png";
         try {
-          BufferedImage myPicture = ImageIO.read(new File(image));
-          if (model.getListOfCaves().get(i).getTreasureList().contains(Treasure.RUBY)) {
+          myPicture = ImageIO.read(new File(image));
+          if (model.getListOfCaves().get(set.getKey()).getTreasureList().contains(Treasure.RUBY)) {
             myPicture = overlay(myPicture, "img/ruby.png", 1);
           }
-          if (model.getListOfCaves().get(i).getTreasureList().contains(Treasure.DIAMOND)) {
+          if (model.getListOfCaves().get(set.getKey()).getTreasureList().contains(Treasure.DIAMOND)) {
             myPicture = overlay(myPicture, "img/diamond.png", 2);
           }
-          if (model.getListOfCaves().get(i).getTreasureList().contains(Treasure.SAPPHIRE)) {
+          if (model.getListOfCaves().get(set.getKey()).getTreasureList().contains(Treasure.SAPPHIRE)) {
             myPicture = overlay(myPicture, "img/emerald.png", 3);
           }
-          if (model.getListOfCaves().get(i).getArrow() > 0) {
+          System.out.println(model.getListOfCaves().get(set.getKey()).getArrow());
+          if (model.getListOfCaves().get(set.getKey()).getArrow() > 0) {
             myPicture = overlay(myPicture, "img/arrow-white.png", 4);
           }
-          if (model.getListOfCaves().get(i).hasMonster()) {
+          if (model.getListOfCaves().get(set.getKey()).hasMonster()) {
             myPicture = overlay(myPicture, "img/otyugh.png", 5);
           }
 
-          if (model.getListOfCaves().get(i).getThief()) {
+          if (model.getListOfCaves().get(set.getKey()).getThief()) {
             myPicture = overlay(myPicture, "img/thief.png", 6);
           }
 
-          if (model.getListOfCaves().get(i).getPit()) {
+          if (model.getListOfCaves().get(set.getKey()).getPit()) {
             myPicture = overlay(myPicture, "img/pit.png", 7);
           }
 
-          if (model.getListOfCaves().get(i).hasMovingMonster()) {
+          if (model.getListOfCaves().get(set.getKey()).hasMovingMonster()) {
             myPicture = overlay(myPicture, "img/monster.png", 7);
           }
 
-          if (model.getPlayer().getCurrentCave().getCaveId() == i) {
+          if (model.getPlayer().getCurrentCave().getCaveId() == set.getKey()) {
             myPicture = overlay(myPicture, "img/player.png", 8);
             if (model.getSmell().equals(Smell.HIGH)) {
               myPicture = overlay(myPicture, "img/stench02.png", 7);
@@ -148,6 +142,8 @@ public class DungeonPanel extends JPanel {
             }
           }
           jLabel.setIcon(new ImageIcon(myPicture));
+          arr.put(set.getKey(), jLabel);
+          jPanel.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 
         } catch (IOException e) {
 
@@ -160,10 +156,11 @@ public class DungeonPanel extends JPanel {
         }
       }
       jPanel.add(jLabel);
-      arr.put(i, jLabel);
+      arr.put(set.getKey(), jLabel);
       this.add(jPanel);
       jPanel.updateUI();
       this.updateUI();
+
     }
 
     if (model.hasReached()) {
@@ -175,19 +172,17 @@ public class DungeonPanel extends JPanel {
     if (model.hasFallenIntoPit()) {
       JOptionPane.showMessageDialog(this, "Player has fallen into the pit!!Game Over!!");
     }
+
   }
 
 
   public void addClickListenerDungeon(IDungeonController controller) {
-    System.out.println("Calling");
+
     for (Map.Entry<Direction, Location> locationEntry : model.getPlayer().getCurrentCave().getCaveList().entrySet()) {
-      System.out.println("curr" + model.getPlayer().getCurrentCave().getCaveId());
-      //arr.get(locationEntry.getValue().getCaveId());
       arr.get(locationEntry.getValue().getCaveId()).addMouseListener(new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {
           super.mouseClicked(e);
-          System.out.println("Here");
           String dir = "";
           if (locationEntry.getKey().equals(Direction.NORTH)) {
             dir = "N";

@@ -18,7 +18,6 @@ import dungeon.DungeonImpl;
 import location.Direction;
 import randomiser.ActualRandomiser;
 import view.ButtonListener;
-import view.DungeonGridView;
 import view.DungeonView;
 import view.KeyboardListener;
 
@@ -58,6 +57,7 @@ public class DungeonController implements IDungeonController, ActionListener {
     this.shootingDistance = -1;
     configureKeyBoardListener();
     configureButtonListener();
+
   }
 
   @Override
@@ -157,7 +157,6 @@ public class DungeonController implements IDungeonController, ActionListener {
     view.addClickListener(this);
     view.makeVisible();
   }
-
 
 
   private void configureKeyBoardListener() {
@@ -421,8 +420,8 @@ public class DungeonController implements IDungeonController, ActionListener {
 
     buttonClickedMap.put("Restart Game Menu", () -> {
       view.setDungeonPreferences();
-      this.model = new DungeonImpl(view.getRows(), view.getCols(), view.getInterconnectivity(), view.getWrapping(), view.getTreasurePercent(), new ActualRandomiser(), view.getNumberOfMonsters());
-      view.restart(model);
+      this.model = new DungeonImpl(model);
+      view.restart(this.model);
       view.addClickListener(this);
       view.resetFocus();
     });
@@ -450,10 +449,9 @@ public class DungeonController implements IDungeonController, ActionListener {
   }
 
   @Override
-  public void move(String s){
+  public void move(String s) {
     DungeonCommandController cmd = new Move(s);
     String move = cmd.goPlay(model);
-    System.out.println("current" + model.getPlayer().getCurrentCave().getCaveId());
     view.setString(move);
     view.showDungeon();
     view.resetFocus();

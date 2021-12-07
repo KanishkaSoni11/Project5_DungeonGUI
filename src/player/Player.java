@@ -91,4 +91,8 @@ public interface Player {
   int getHealth();
 
   void injure();
+
+  Location getStartCave();
+
+  void resetPlayer();
 }
