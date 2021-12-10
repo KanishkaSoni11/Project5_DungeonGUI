@@ -18,7 +18,6 @@ public interface DungeonView {
 
   void addKeyListener(KeyListener listener);
 
-
   void addActionListener(ActionListener actionListener);
 
   void resetFocus();

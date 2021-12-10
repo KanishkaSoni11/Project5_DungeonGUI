@@ -81,18 +81,6 @@ public class CaveTest {
   }
 
   @Test
-  public void testUpdateVisit() {
-    cave.updateVisit(true);
-    assertTrue(cave.isVisited());
-  }
-
-  @Test
-  public void testIsVisited() {
-    cave.updateVisit(false);
-    assertFalse(cave.isVisited());
-  }
-
-  @Test
   public void testGetCaveId() {
     assertEquals(1, cave.getCaveId());
   }

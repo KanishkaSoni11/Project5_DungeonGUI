@@ -37,7 +37,7 @@ public class FixedRandomiserTest {
   @Test
   public void shuffle() {
     List<Location> unshuffledList = new ArrayList<>(caveList);
-    number1.shuffle(caveList);
+    number1.randomList(caveList);
     assertEquals(unshuffledList, caveList);
   }
 }

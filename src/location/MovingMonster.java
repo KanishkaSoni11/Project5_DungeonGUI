@@ -1,6 +1,6 @@
 package location;
 
-public class MovingMonster implements CaveCreature {
+public class MovingMonster implements LocationMonster {
 
   private int health;
 
@@ -8,7 +8,7 @@ public class MovingMonster implements CaveCreature {
     health = 100;
   }
 
-  public MovingMonster(CaveCreature movingMonster) throws IllegalArgumentException {
+  public MovingMonster(LocationMonster movingMonster) throws IllegalArgumentException {
     if (movingMonster == null) {
       throw new IllegalArgumentException("Moving Monster cannot be null");
     }

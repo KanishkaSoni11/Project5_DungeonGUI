@@ -32,7 +32,7 @@ public class DungeonController implements IDungeonController, ActionListener {
   private Dungeon model;
   private DungeonView view;
   private boolean shootMonster;
-  private int shootingDistance;
+  private String shootingDistance;
 
   /**
    * Constructor for the controller.
@@ -48,18 +48,30 @@ public class DungeonController implements IDungeonController, ActionListener {
     scan = new Scanner(in);
   }
 
+  /**
+   * Constructs the controller for the GUI to pass the readonly model to the view and do operations
+   * on the model using command controller.
+   *
+   * @param model the model to perform operations
+   * @param view  view to be displayed in GUI
+   */
   public DungeonController(Dungeon model, DungeonView view) {
     out = null;
     scan = null;
     this.model = model;
     this.view = view;
     this.shootMonster = false;
-    this.shootingDistance = -1;
+    this.shootingDistance = "-1";
     configureKeyBoardListener();
     configureButtonListener();
 
   }
 
+  /**
+   * Command pattern referred from Canvas -
+   * https://northeastern.instructure.com/courses/90366/pages/8-dot-8-summary?module_item_id=6535613
+   * Prof Jump's example code
+   */
   @Override
   public void play(Dungeon dungeon) throws IllegalArgumentException {
 
@@ -95,7 +107,7 @@ public class DungeonController implements IDungeonController, ActionListener {
           case "S":
           case "s":
             out.append("Enter distance:").append("\n");
-            int dis = scan.nextInt();
+            String dis = scan.next();
             out.append("Enter the direction:").append("\n");
             input = scan.next();
             Direction direction;
@@ -158,6 +170,12 @@ public class DungeonController implements IDungeonController, ActionListener {
     view.makeVisible();
   }
 
+
+  /**
+   * code referred from  -
+   * https://northeastern.instructure.com/courses/90366/files/10995936?wrap=1
+   * Prof Jump's example code.
+   */
 
   private void configureKeyBoardListener() {
 
@@ -252,7 +270,7 @@ public class DungeonController implements IDungeonController, ActionListener {
     keyPresses.put(KeyEvent.VK_1, () -> {
               if (shootMonster) {
                 view.setString("Distance: 1, Enter Direction:");
-                this.shootingDistance = 1;
+                this.shootingDistance = "1";
               }
 
             }
@@ -261,7 +279,7 @@ public class DungeonController implements IDungeonController, ActionListener {
     keyPresses.put(KeyEvent.VK_2, () -> {
               if (shootMonster) {
                 view.setString("Distance: 2, Enter Direction:");
-                this.shootingDistance = 2;
+                this.shootingDistance = "2";
               }
             }
     );
@@ -269,7 +287,7 @@ public class DungeonController implements IDungeonController, ActionListener {
     keyPresses.put(KeyEvent.VK_3, () -> {
               if (shootMonster) {
                 view.setString("Distance: 3, Enter Direction:");
-                this.shootingDistance = 3;
+                this.shootingDistance = "3";
               }
             }
     );
@@ -277,7 +295,7 @@ public class DungeonController implements IDungeonController, ActionListener {
     keyPresses.put(KeyEvent.VK_4, () -> {
               if (shootMonster) {
                 view.setString("Distance: 4, Enter Direction:");
-                this.shootingDistance = 4;
+                this.shootingDistance = "4";
               }
 
             }
@@ -286,9 +304,8 @@ public class DungeonController implements IDungeonController, ActionListener {
     keyPresses.put(KeyEvent.VK_5, () -> {
               if (shootMonster) {
                 view.setString("Distance: 5, Enter Direction:");
-                this.shootingDistance = 5;
+                this.shootingDistance = "5";
               }
-
             }
     );
 
@@ -340,8 +357,11 @@ public class DungeonController implements IDungeonController, ActionListener {
   }
 
   /**
-   * Setting up the button listeners.
+   * code referred from  -
+   * https://northeastern.instructure.com/courses/90366/files/10995936?wrap=1
+   * Prof Jump's example code.
    */
+
   private void configureButtonListener() {
     Map<String, Runnable> buttonClickedMap = new HashMap<>();
     ButtonListener buttonListener = new ButtonListener();
@@ -395,7 +415,7 @@ public class DungeonController implements IDungeonController, ActionListener {
     });
 
     buttonClickedMap.put("Shoot Arrow Button", () -> {
-      int dis = Integer.parseInt(view.getDistance());
+      String dis = view.getDistance();
       String input = view.getDirection();
       Direction direction;
 
@@ -419,7 +439,6 @@ public class DungeonController implements IDungeonController, ActionListener {
     });
 
     buttonClickedMap.put("Restart Game Menu", () -> {
-      view.setDungeonPreferences();
       this.model = new DungeonImpl(model);
       view.restart(this.model);
       view.addClickListener(this);
@@ -428,7 +447,9 @@ public class DungeonController implements IDungeonController, ActionListener {
 
     buttonClickedMap.put("New Game Menu", () -> {
       view.setDungeonPreferences();
-      this.model = new DungeonImpl(view.getRows(), view.getCols(), view.getInterconnectivity(), view.getWrapping(), view.getTreasurePercent(), new ActualRandomiser(), view.getNumberOfMonsters());
+      this.model = new DungeonImpl(view.getRows(), view.getCols(),
+              view.getInterconnectivity(), view.getWrapping(),
+              view.getTreasurePercent(), new ActualRandomiser(), view.getNumberOfMonsters());
       view.restart(model);
       view.addClickListener(this);
       view.resetFocus();
@@ -465,5 +486,37 @@ public class DungeonController implements IDungeonController, ActionListener {
     } catch (Exception ex) {
       view.showErrorMessage(ex.getMessage());
     }
+  }
+
+  public void moveDir(String direction) {
+    DungeonCommandController cmd = new Move(direction);
+    String setString = cmd.goPlay(model);
+    view.setString(setString);
+    view.showDungeon();
+    view.resetFocus();
+  }
+
+  public void pickTreasure() {
+    DungeonCommandController cmd = new PickTreasure();
+    String setString = cmd.goPlay(model);
+    view.setString(setString);
+    view.showDungeon();
+    view.resetFocus();
+  }
+
+  public void pickArrow() {
+    DungeonCommandController cmd = new PickArrow();
+    String setString = cmd.goPlay(model);
+    view.setString(setString);
+    view.showDungeon();
+    view.resetFocus();
+  }
+
+  public void shoot(String shootingDistance, Direction direction) {
+    DungeonCommandController cmd = new ShootArrow(shootingDistance, direction);
+    String move = cmd.goPlay(model);
+    view.setString(move);
+    this.shootMonster = false;
+    view.resetFocus();
   }
 }

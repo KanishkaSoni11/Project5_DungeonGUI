@@ -18,7 +18,7 @@ public class ActualRandomiser implements Randomiser {
   }
 
   @Override
-  public <T> void shuffle(List<T> list) {
+  public <T> void randomList(List<T> list) {
     Collections.shuffle(list);
   }
 }

@@ -76,13 +76,8 @@ public interface ReadOnlyDungeonModel {
 
   Randomiser getRandomiser();
 
-  List<Edge> getEdge();
-
-  List<Edge> getMstList();
-
   int getFinalPercent();
 
-  Dungeon getDungeonCopy();
 
   ArrayList<Location> getCaveFinalList() ;
 

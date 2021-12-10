@@ -9,7 +9,6 @@ import java.awt.event.MouseEvent;
 
 import javax.swing.*;
 
-import control.DungeonController;
 import control.IDungeonController;
 import dungeon.ReadOnlyDungeonModel;
 
@@ -36,9 +35,7 @@ public class DungeonGridView extends JFrame implements DungeonView {
   private JLabel directionLabel;
   private JTextField directionTextField;
   private JTextField distanceTextField;
-  private JFrame jFrameDungeonPref;
   private ReadOnlyDungeonModel model;
-  private JSplitPane jSplitPane;
   private JTextField rowText;
   private JTextField colsText;
   private JTextField interconnectivityText;
@@ -46,8 +43,6 @@ public class DungeonGridView extends JFrame implements DungeonView {
   private JTextField treasurePercentText;
   private JTextField numberOfMonstersText;
   private IDungeonController controller;
-
-
 
   private JButton shootButton;
   private JLabel moveLabel;
@@ -70,14 +65,14 @@ public class DungeonGridView extends JFrame implements DungeonView {
     dungeonPanel = new DungeonPanel(model);
     dungeonPanel.setPreferredSize(new Dimension(500, 500));
 
-   // dungeonPanel.setDungeonPanel();
-    dungeonPanel.showCaveDetails();
+   dungeonPanel.setDungeonPanelBlack();
+
     jScrollPane = new JScrollPane(dungeonPanel);
     this.add(BorderLayout.CENTER, jScrollPane);
     moveLabel = new JLabel();
-    moveLabel.setPreferredSize(new Dimension(500, 100));
+    moveLabel.setPreferredSize(new Dimension(500, 150));
     dungeonPanel.add(BorderLayout.PAGE_START, moveLabel);
-
+    dungeonPanel.showCaveDetails();
     locationDescLabel = new JLabel("", SwingConstants.CENTER);
     locationDescLabel.setPreferredSize(new Dimension(700, 200));
     this.add(BorderLayout.PAGE_END, locationDescLabel);
@@ -104,13 +99,13 @@ public class DungeonGridView extends JFrame implements DungeonView {
 
     newGame1 = new JMenuItem("New Game");
     newGame1.setActionCommand("New Game Menu");
-    restart = new JMenuItem("Restart Game");
+    restart = new JMenuItem("Reuse Game");
     restart.setActionCommand("Restart Game Menu");
 
     newGame.add(newGame1);
     newGame.add(restart);
 
-    JMenuItem exitButton = new JMenuItem("Exit Game");
+    JMenuItem exitButton = new JMenuItem("Quit Game");
     exit.add(exitButton);
     exitButton.addActionListener((ActionEvent e) -> System.exit(0));
 
@@ -201,7 +196,6 @@ public class DungeonGridView extends JFrame implements DungeonView {
 
   @Override
   public void showDungeon() {
-
     dungeonPanel.showCaveDetails();
   }
 
@@ -282,7 +276,7 @@ public class DungeonGridView extends JFrame implements DungeonView {
     jPanel.add(numberOfMonsters);
     jPanel.add(numberOfMonstersText);
 
-    JOptionPane.showConfirmDialog(this, jPanel,
+    JOptionPane.showMessageDialog(this, jPanel,
             "Dungeon Preferences", JOptionPane.OK_OPTION);
     resetFocus();
   }

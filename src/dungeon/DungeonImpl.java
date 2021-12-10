@@ -1,13 +1,14 @@
 package dungeon;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import location.Cave;
-import location.CaveCreature;
+import location.LocationMonster;
 import location.Direction;
 import location.Location;
 import location.LocationType;
@@ -40,7 +41,6 @@ public class DungeonImpl implements Dungeon {
   private boolean movingMonsterIsAlive;
   private final float treasurePercent;
   private ArrayList<Location> cavesFinalList;
-  private Dungeon dungeonCopy;
 
 
   /**
@@ -70,7 +70,7 @@ public class DungeonImpl implements Dungeon {
       throw new IllegalArgumentException("The number of columns entered is invalid.");
     }
     if (interconnectivity < 0) {
-      throw new IllegalArgumentException("Inter connectivity entered is invalid");
+      throw new IllegalArgumentException("Interconnectivity entered is invalid");
     }
     if (treasurePercent < 0 || treasurePercent > 100) {
       throw new IllegalArgumentException("Treasure percent should be between 0 and 100");
@@ -95,7 +95,7 @@ public class DungeonImpl implements Dungeon {
     this.finalPercent = (int) Math.ceil(treasurePercent
             + randomiser.getRandom(0, (int) (100 - treasurePercent)));
     this.movingMonsterCaveId = 0;
-    this.movingMonsterIsAlive = true;
+    this.movingMonsterIsAlive = this.numberOfMonsters > 5;
     this.cavesFinalList = new ArrayList<>();
     createDungeon();
     createListOfCaves();
@@ -104,14 +104,19 @@ public class DungeonImpl implements Dungeon {
     putTreasure();
     putArrows();
     putMonster();
-    putPit();
-    putThief();
+    if (this.interconnectivity > 2) {
+      putPit();
+      putThief();
+    }
+
     createCavesFinalList();
-    player = new PlayerImp("John", start);
-    makeDungeonCopy();
+    this.player = new PlayerImp("Harry", start);
   }
 
-  public DungeonImpl(ReadOnlyDungeonModel dungeon) {
+  public DungeonImpl(ReadOnlyDungeonModel dungeon) throws IllegalArgumentException {
+    if (dungeon == null) {
+      throw new IllegalArgumentException("Dungeon cannot be null");
+    }
 
     this.rows = dungeon.getRow();
     this.columns = dungeon.getColumns();
@@ -127,10 +132,16 @@ public class DungeonImpl implements Dungeon {
     this.movingMonsterIsAlive = true;
 
     for (int i = 0; i < cavesFinalList.size(); i++) {
-      this.listOfCaves.get(i).addArrow(dungeon.getCaveFinalList().get(i).getArrow());
-      for (int j = 0; j < dungeon.getCaveFinalList().get(i).getTreasureList().size(); j++) {
-        this.listOfCaves.get(i).addTreasureToCave(dungeon.getCaveFinalList().get(i).getTreasureList().get(j));
+      if (cavesFinalList.get(i).getArrow() != listOfCaves.get(i).getArrow()) {
+        this.listOfCaves.get(i).addArrow(dungeon.getCaveFinalList().get(i).getArrow());
       }
+
+      if (!cavesFinalList.get(i).getTreasureList().equals(listOfCaves.get(i).getTreasureList())) {
+        for (int j = 0; j < dungeon.getCaveFinalList().get(i).getTreasureList().size(); j++) {
+          this.listOfCaves.get(i).addTreasureToCave(dungeon.getCaveFinalList().get(i).getTreasureList().get(j));
+        }
+      }
+
       if (this.cavesFinalList.get(i).hasMonster()) {
         this.listOfCaves.get(i).addMonster();
       }
@@ -142,6 +153,9 @@ public class DungeonImpl implements Dungeon {
       if (this.cavesFinalList.get(i).hasMovingMonster()) {
         this.listOfCaves.get(i).addMovingMonster();
       }
+      if (this.cavesFinalList.get(i).getPit()) {
+        this.listOfCaves.get(i).setPit();
+      }
     }
 
     for (int i = 0; i < cavesFinalList.size(); i++) {
@@ -151,7 +165,8 @@ public class DungeonImpl implements Dungeon {
         this.end = listOfCaves.get(i);
       }
     }
-    this.player = new PlayerImp("John", this.start);
+
+    this.player = new PlayerImp("Harry", this.start);
 
   }
 
@@ -177,11 +192,12 @@ public class DungeonImpl implements Dungeon {
 
   @Override
   public boolean hasReached() {
-    return (player.getCurrentCave().getCaveId() == this.end.getCaveId());
+    return (player.getPlayerCave().getCaveId() == this.end.getCaveId());
   }
 
+  @Override
   public boolean hasFallenIntoPit() {
-    return player.getCurrentCave().getPit();
+    return player.getPlayerCave().getPit();
   }
 
   @Override
@@ -215,44 +231,21 @@ public class DungeonImpl implements Dungeon {
   }
 
   @Override
-  public List<Edge> getEdge() {
-    return new ArrayList<>(this.edge);
-  }
-
-  @Override
-  public List<Edge> getMstList() {
-    return new ArrayList<>(this.mstList);
-  }
-
-  @Override
   public int getFinalPercent() {
     return this.finalPercent;
   }
 
-  public void makeDungeonCopy() {
-    dungeonCopy = new DungeonImpl(this);
-  }
-
-  @Override
-  public Dungeon getDungeonCopy() {
-    return new DungeonImpl(dungeonCopy);
-  }
-
   @Override
   public ArrayList<Location> getCaveFinalList() {
-//    for (int i = 0; i < cavesFinalList.size(); i++) {
-//      System.out.println(cavesFinalList.get(i));
-//
-//    }
     return new ArrayList<>(cavesFinalList);
   }
-
 
   @Override
   public String playerToPickArrow() {
     StringBuilder sb = new StringBuilder();
-    if (player.getCurrentCave().getArrow() > 0 && player.getPlayerLive()) {
+    if (player.getPlayerCave().getArrow() > 0 && player.getPlayerLive()) {
       player.pickArrow();
+      player.removeArrow(player.getPlayerCave());
       sb.append("Player picked the arrow.").append("\n");
     } else if (!player.getPlayerLive()) {
       sb.append("Player is dead. Can't pick arrows");
@@ -275,33 +268,26 @@ public class DungeonImpl implements Dungeon {
 
     for (int i = 0; i < rows; i++) {
       for (int j = 0; j < columns - 1; j++) {
-        edge.add(new Edge(dungeonArr[i][j], dungeonArr[i][j + 1], randomiser.getRandom(0, 10)));
+        edge.add(new Edge(dungeonArr[i][j], dungeonArr[i][j + 1], randomiser.getRandom(0, 5)));
       }
     }
 
     for (int i = 0; i < rows - 1; i++) {
       for (int j = 0; j < columns; j++) {
-        edge.add(new Edge(dungeonArr[i][j], dungeonArr[i + 1][j], randomiser.getRandom(0, 10)));
+        edge.add(new Edge(dungeonArr[i][j], dungeonArr[i + 1][j], randomiser.getRandom(0, 5)));
       }
     }
 
     if (wrapping) {
-      for (int i = 0; i < rows; i++) {
-        edge.add(new Edge(dungeonArr[i][0], dungeonArr[i][columns - 1]
-                , randomiser.getRandom(0, 10)));
-      }
-
-      for (int i = 0; i < columns; i++) {
-        edge.add(new Edge(dungeonArr[0][i], dungeonArr[rows - 1][i]
-                , randomiser.getRandom(0, 10)));
-      }
+      DungeonWrapped dungeonWrapped = new DungeonWrapped(edge, dungeonArr, rows, columns, randomiser);
+      edge = dungeonWrapped.makeWrappedDungeon();
     }
 
     DungeonCreation dungeonCreation = new DungeonCreation(edge, rows * columns);
     mstList = dungeonCreation.kruskalAlgo();
     edge.removeAll(mstList);
 
-    randomiser.shuffle(edge);
+    randomiser.randomList(edge);
 
     if (edge.size() < interconnectivity) {
       throw new IllegalArgumentException("The given interconnectivity is wrong");
@@ -310,7 +296,7 @@ public class DungeonImpl implements Dungeon {
     for (int i = 0; i < interconnectivity; i++) {
       mstList.add(edge.get(i));
     }
-    System.out.println(mstList);
+
   }
 
   private void createListOfCaves() {
@@ -322,38 +308,43 @@ public class DungeonImpl implements Dungeon {
   }
 
   private void addAdjacentCaves() {
-    Direction directions;
-    for (Edge value : mstList) {
-      for (Location listOfCave : listOfCaves) {
-        if (listOfCave.getCaveId() == (value.getSrc())) {
-          if (value.getDest() - listOfCave.getCaveId() == 1) {
+    Direction directions = null;
+    Direction oppDirection = null;
+    for (int i = 0; i < mstList.size(); i++) {
+      for (int j = 0; j < listOfCaves.size(); j++) {
+        if (listOfCaves.get(j).getCaveId() == (mstList.get(i).getSrc())) {
+          int diff = Math.abs(mstList.get(i).getDest() - listOfCaves.get(j).getCaveId());
+          if (diff == 1) {
             directions = Direction.EAST;
+            oppDirection = Direction.WEST;
 
-            listOfCave.addCaveList(directions, listOfCaves.get(value.getDest()));
-            listOfCaves.get(value.getDest()).addCaveList(Direction.WEST
-                    , listOfCave);
+            listOfCaves.get(j).addCaveList(directions, listOfCaves.get(mstList.get(i).getDest()));
+            listOfCaves.get(mstList.get(i).getDest()).addCaveList(oppDirection
+                    , listOfCaves.get(j));
 
-          } else if (value.getDest()
-                  - listOfCave.getCaveId() == Math.abs(columns - 1)) {
+          } else if (diff == Math.abs(columns - 1)) {
             directions = Direction.WEST;
+            oppDirection = Direction.EAST;
 
-            listOfCave.addCaveList(directions, listOfCaves.get(value.getDest()));
-            listOfCaves.get(value.getDest()).addCaveList(Direction.EAST
-                    , listOfCave);
+            listOfCaves.get(j).addCaveList(directions, listOfCaves.get(mstList.get(i).getDest()));
+            listOfCaves.get(mstList.get(i).getDest()).addCaveList(oppDirection
+                    , listOfCaves.get(j));
 
-          } else if (value.getDest() - listOfCave.getCaveId() == columns) {
+          } else if (diff == columns) {
             directions = Direction.SOUTH;
+            oppDirection = Direction.NORTH;
 
-            listOfCave.addCaveList(directions, listOfCaves.get(value.getDest()));
-            listOfCaves.get(value.getDest()).addCaveList(Direction.NORTH
-                    , listOfCave);
+            listOfCaves.get(j).addCaveList(directions, listOfCaves.get(mstList.get(i).getDest()));
+            listOfCaves.get(mstList.get(i).getDest()).addCaveList(oppDirection
+                    , listOfCaves.get(j));
 
-          } else if (value.getDest() - listOfCave.getCaveId() > columns) {
+          } else if (diff > columns) {
             directions = Direction.NORTH;
+            oppDirection = Direction.SOUTH;
 
-            listOfCave.addCaveList(directions, listOfCaves.get(value.getDest()));
-            listOfCaves.get(value.getDest()).addCaveList(Direction.SOUTH
-                    , listOfCave);
+            listOfCaves.get(j).addCaveList(directions, listOfCaves.get(mstList.get(i).getDest()));
+            listOfCaves.get(mstList.get(i).getDest()).addCaveList(oppDirection
+                    , listOfCaves.get(j));
 
           }
         }
@@ -361,10 +352,7 @@ public class DungeonImpl implements Dungeon {
     }
   }
 
-  private void putTreasure() {
-    Treasure[] treasureList = Treasure.values();
-
-    List<Location> treasureCave = new ArrayList<Location>();
+  private List<Location> getRandomCaveList() {
     List<Location> listOfCavesCopy = new ArrayList<Location>();
 
     for (int i = 0; i < listOfCaves.size(); i++) {
@@ -372,23 +360,32 @@ public class DungeonImpl implements Dungeon {
         listOfCavesCopy.add(listOfCaves.get(i));
       }
     }
-    randomiser.shuffle(listOfCavesCopy);
+    randomiser.randomList(listOfCavesCopy);
+    return new ArrayList<>(listOfCavesCopy);
+  }
+
+
+  private void putTreasure() {
+    Treasure[] treasureList = Treasure.values();
+    List<Location> treasureCave = new ArrayList<Location>();
+    List<Location> listOfCavesCopy = getRandomCaveList();
+
     int loopNum = (int) (finalPercent * (listOfCavesCopy.size() / 100.0));
     for (int i = 0; i < loopNum; i++) {
       treasureCave.add(listOfCavesCopy.get(i));
       for (int j = 0; j < treasureList.length; j++) {
-        treasureCave.get(i).addTreasureToCave(treasureList[this.randomiser.getRandom(0, 2) % 3]);
+        treasureCave.get(i).addTreasureToCave(treasureList[j]);
       }
     }
-
   }
+
 
   private void putArrows() {
     int loopNum = (int) (finalPercent * listOfCaves.size() / 100.0);
 
     List<Location> listOfCavesCopy = new ArrayList<Location>(listOfCaves);
 
-    randomiser.shuffle(listOfCavesCopy);
+    randomiser.randomList(listOfCavesCopy);
 
     for (int i = 0; i < loopNum; i++) {
       listOfCavesCopy.get(i).addArrow(randomiser.getRandom(1, 3));
@@ -396,15 +393,8 @@ public class DungeonImpl implements Dungeon {
   }
 
   private void putMonster() {
-    List<Location> listOfCavesCopy = new ArrayList<Location>();
-
-    for (int i = 0; i < listOfCaves.size(); i++) {
-      if (listOfCaves.get(i).getLocationType().equals(LocationType.CAVE)) {
-        listOfCavesCopy.add(listOfCaves.get(i));
-      }
-    }
     end.addMonster();
-    randomiser.shuffle(listOfCavesCopy);
+    List<Location> listOfCavesCopy = getRandomCaveList();
 
     if (numberOfMonsters - 1 > listOfCavesCopy.size()) {
       throw new IllegalArgumentException("The number of monsters should be less "
@@ -424,8 +414,9 @@ public class DungeonImpl implements Dungeon {
     StringBuilder sb = new StringBuilder();
     if (isTreasure()) {
       sb.append("Treasures in the destinations: ").append("\n");
-      for (int i = 0; i < player.getCurrentCave().getTreasureList().size(); i++) {
-        sb.append(" " + player.getCurrentCave().getTreasureList().get(i).toString());
+      for (int i = 0; i < player.getPlayerCave().getTreasureList().size(); i++) {
+        Collections.sort(player.getPlayerCave().getTreasureList());
+        sb.append(" " + player.getPlayerCave().getTreasureList().get(i).toString());
       }
     }
     return sb.toString();
@@ -433,27 +424,32 @@ public class DungeonImpl implements Dungeon {
 
   @Override
   public Smell getSmell() {
-    int count = 0;
-    Map<Location, Integer> smellList;
-    smellList = endUsingBfs(player.getCurrentCave());
-    for (Map.Entry<Location, Integer> set : smellList.entrySet()) {
-      if (set.getValue() == 1 && set.getKey().hasMonster()) {
+    int numberOfMonsters = 0;
+    Location cave;
+
+    for (Map.Entry<Direction, Location> set : player.getPlayerCave().getCaveList().entrySet()) {
+      if (set.getValue().hasMonster()) {
         return Smell.HIGH;
-      } else if (set.getValue() == 2 && set.getKey().hasMonster()) {
-        count++;
+      } else {
+        cave = set.getValue();
+        for (Map.Entry<Direction, Location> setNeighbour : cave.getCaveList().entrySet()) {
+          if (setNeighbour.getValue().hasMonster()) {
+            numberOfMonsters++;
+          }
+        }
       }
     }
 
-    if (count >= 2) {
+    if (numberOfMonsters >= 2) {
       return Smell.HIGH;
-    } else if (count == 1) {
+    } else if (numberOfMonsters == 1) {
       return Smell.LOW;
     }
     return Smell.NONE;
   }
 
   public boolean getSoil() {
-    for (Map.Entry<Direction, Location> set : player.getCurrentCave().getCaveList().entrySet()) {
+    for (Map.Entry<Direction, Location> set : player.getPlayerCave().getCaveList().entrySet()) {
       if (set.getValue().getPit()) {
         return true;
       }
@@ -463,19 +459,13 @@ public class DungeonImpl implements Dungeon {
 
 
   private void putPit() {
-    List<Location> listOfCavesCopy = new ArrayList<Location>();
+    List<Location> listOfCavesCopy = getRandomCaveList();
 
-    for (Location listOfCave : listOfCaves) {
-      if (listOfCave.getLocationType().equals(LocationType.CAVE)) {
-        listOfCavesCopy.add(listOfCave);
-      }
-    }
-
-    randomiser.shuffle(listOfCavesCopy);
     listOfCavesCopy.remove(start);
 
     for (int i = 0; i < listOfCavesCopy.size(); i++) {
       if (!listOfCavesCopy.get(i).hasMonster()) {
+        System.out.println(listOfCavesCopy.get(i).getCaveId());
         listOfCavesCopy.get(i).setPit();
         break;
       }
@@ -496,7 +486,7 @@ public class DungeonImpl implements Dungeon {
       }
     }
 
-    randomiser.shuffle(listOfCavesCopy);
+    randomiser.randomList(listOfCavesCopy);
     listOfCavesCopy.remove(start);
 
     for (int i = 0; i < listOfCavesCopy.size(); i++) {
@@ -518,65 +508,63 @@ public class DungeonImpl implements Dungeon {
   }
 
 
+  /**
+   * code referred from:
+   * https://www.geeksforgeeks.org/breadth-first-search-or-bfs-for-a-graph/
+   */
+
   @Override
-  public Map<Location, Integer> endUsingBfs(Location src) {
+  public ArrayList<Location> endUsingBfs(Location src) {
     if (src == null) {
       throw new IllegalArgumentException("Source Location cannot be null");
     }
+    boolean[] isVisited = new boolean[listOfCaves.size()];
     LinkedList<Location> queue = new LinkedList<Location>();
-    Map<Location, Integer> levelMap = new HashMap<Location, Integer>();
+    List<Location> arr = new ArrayList<>();
+    isVisited[src.getCaveId()] = true;
 
-    src.updateVisit(true);
+    int level = 0;
     queue.add(src);
-    levelMap.put(src, 0);
 
     while (queue.size() != 0) {
       src = queue.poll();
 
       for (Location n : new ArrayList<Location>(src.getCaveList().values())) {
-        if (!n.isVisited()) {
-          n.updateVisit(true);
+        if (!isVisited[n.getCaveId()]) {
+          isVisited[src.getCaveId()] = true;
           queue.add(n);
-          levelMap.put(n, levelMap.get(src) + 1);
+          level++;
+          if (level > 6) {
+            arr.add(n);
+          }
         }
       }
     }
 
     for (Location i : listOfCaves) {
-      i.updateVisit(false);
+      isVisited[i.getCaveId()] = false;
     }
 
-    return new HashMap<Location, Integer>(levelMap);
+    return new ArrayList<>(arr);
   }
 
   private void findPossibleMoves() {
 
-    List<Location> listForStart = new ArrayList<Location>();
-
-    for (Location location : listOfCaves) {
-      if (location.getLocationType() != LocationType.TUNNEL) {
-        listForStart.add(location);
-      }
-    }
-
-    randomiser.shuffle(listForStart);
+    List<Location> listForStart = getRandomCaveList();
 
     for (Location i : listForStart) {
       this.start = i;
-      Map<Location, Integer> level = endUsingBfs(this.start);
+      ArrayList<Location> findEnd = endUsingBfs(this.start);
       this.end = null;
 
-      for (Location j : level.keySet()) {
-        int value = level.get(j);
-
-        if (value >= 5 && j.getLocationType() != LocationType.TUNNEL) {
-          this.end = j;
-          break;
+      if (findEnd.size() > 0) {
+        randomiser.randomList(findEnd);
+        for (int j = 0; j < findEnd.size(); j++) {
+          if (findEnd.get(j).getLocationType() == LocationType.CAVE) {
+            this.end = findEnd.get(j);
+            break;
+          }
         }
-      }
-
-      if (this.end != null) {
-        break;
       }
     }
 
@@ -586,86 +574,62 @@ public class DungeonImpl implements Dungeon {
   }
 
   @Override
-  public String shootArrow(int distance, Direction direction) throws IllegalArgumentException {
+  public String shootArrow(String distance, Direction direction) throws IllegalArgumentException {
     StringBuilder sb = new StringBuilder();
-    if (distance <= 0) {
-      throw new IllegalArgumentException("Distance should be greater than one.");
-    }
-    if (direction == null) {
-      throw new IllegalArgumentException("Direction cannot be negative");
-    }
-    if (player.getArrowCount() <= 0) {
-      sb.append("The player is not left with any arrows to shoot.");
-    }
-    Location caveForArrow;
-    Direction oppDir = null;
-
-    player.shootArrow();
-
-    if (player.getCurrentCave().getCaveList().containsKey(direction)) {
-      caveForArrow = player.getCurrentCave().getCaveList().get(direction);
-      if (caveForArrow.getLocationType() == LocationType.CAVE) {
-        distance--;
+    try {
+      int dis = Integer.parseInt(distance);
+      if (dis <= 0) {
+        throw new IllegalArgumentException("Distance should be greater than one.");
       }
-      if (distance == 0) {
-        if (caveForArrow.hasMonster()) {
-          caveForArrow.hitMonster();
-          if (caveForArrow.hasMonster()) {
-            sb.append("Player has injured the monster.").append("\n");
-            return sb.toString();
-          } else {
-            sb.append("Player has killed the monster.").append("\n");
-            return sb.toString();
-          }
-        }
-        sb.append("Player shot into into the darkness.").append("\n");
-        return sb.toString();
+      if (dis > 5) {
+        sb.append("The distance cannot be greater than 5");
       }
-    } else {
-      sb.append("Player shot into into the darkness.").append("\n");
-      return sb.toString();
-    }
+      if (direction == null) {
+        throw new IllegalArgumentException("Direction cannot be negative");
+      }
 
-    while (distance > 0) {
-      if (caveForArrow.getLocationType() == LocationType.CAVE) {
-        if (caveForArrow.getCaveList().containsKey(direction)) {
-          caveForArrow = caveForArrow.getCaveList().get(direction);
+      Location caveForArrow = player.getPlayerCave();
+      Direction oppDir = null;
+
+      player.shootArrow();
+
+      if (player.getPlayerCave().getCaveList().containsKey(direction)) {
+        caveForArrow = player.getPlayerCave().getCaveList().get(direction);
+        while (dis > 0) {
           if (caveForArrow.getLocationType() == LocationType.CAVE) {
-            distance--;
-          }
-          if (distance == 0) {
-            break;
-          }
-        } else {
-          break;
-        }
-      } else if (caveForArrow.getLocationType() == LocationType.TUNNEL) {
-        for (Map.Entry<Direction, Location> entry : caveForArrow.getCaveList().entrySet()) {
-          if (direction == Direction.NORTH) {
-            oppDir = Direction.SOUTH;
-          } else if (direction == Direction.SOUTH) {
-            oppDir = Direction.NORTH;
-          } else if (direction == Direction.EAST) {
-            oppDir = Direction.WEST;
-          } else if (direction == Direction.WEST) {
-            oppDir = Direction.EAST;
-          }
-
-          if (entry.getKey() != oppDir) {
-            caveForArrow = entry.getValue();
-            direction = entry.getKey();
-
-            if (caveForArrow.getLocationType() == LocationType.CAVE) {
-              distance--;
+            dis--;
+            if (dis == 0) {
+              break;
             }
+            caveForArrow = caveForArrow.getCaveList().get(direction);
+          } else if (caveForArrow.getLocationType() == LocationType.TUNNEL) {
+            for (Map.Entry<Direction, Location> entry : caveForArrow.getCaveList().entrySet()) {
+              if (direction == Direction.NORTH) {
+                oppDir = Direction.SOUTH;
+              } else if (direction == Direction.SOUTH) {
+                oppDir = Direction.NORTH;
+              } else if (direction == Direction.EAST) {
+                oppDir = Direction.WEST;
+              } else if (direction == Direction.WEST) {
+                oppDir = Direction.EAST;
+              }
+              if (entry.getKey() != oppDir) {
+                caveForArrow = entry.getValue();
+                direction = entry.getKey();
+
+                if (caveForArrow.getLocationType() == LocationType.CAVE) {
+                  dis--;
+                }
+                break;
+              }
+            }
+          } else {
             break;
           }
         }
       }
-    }
 
-    if (caveForArrow.hasMonster() && distance == 0) {
-      if (caveForArrow.hasMonster()) {
+      if (caveForArrow.hasMonster() && dis == 0) {
         caveForArrow.hitMonster();
         if (caveForArrow.hasMonster()) {
           sb.append("Player has injured the monster.").append("\n");
@@ -674,12 +638,16 @@ public class DungeonImpl implements Dungeon {
           sb.append("Player has killed the monster.").append("\n");
           return sb.toString();
         }
+      } else if (dis != 0) {
+        sb.append("Player shot into into the darkness.").append("\n");
+        return sb.toString();
       }
       sb.append("Player shot into into the darkness.").append("\n");
       return sb.toString();
+    } catch (NumberFormatException ex) {
+      throw new NumberFormatException("Distance has to be number");
     }
-    sb.append("Player shot into into the darkness.").append("\n");
-    return sb.toString();
+
   }
 
   @Override
@@ -690,15 +658,15 @@ public class DungeonImpl implements Dungeon {
     boolean correctMove;
     StringBuilder sb = new StringBuilder();
     if (player.getPlayerLive() && !hasReached()) {
-      if (move.equalsIgnoreCase("N")) {
+      if (move.equalsIgnoreCase("n")) {
         correctMove = player.move(Direction.NORTH);
-      } else if (move.equalsIgnoreCase("S")) {
+      } else if (move.equalsIgnoreCase("s")) {
         correctMove = player.move(Direction.SOUTH);
 
-      } else if (move.equalsIgnoreCase("E")) {
+      } else if (move.equalsIgnoreCase("e")) {
         correctMove = player.move(Direction.EAST);
 
-      } else if (move.equalsIgnoreCase("W")) {
+      } else if (move.equalsIgnoreCase("w")) {
         correctMove = player.move(Direction.WEST);
 
       } else {
@@ -706,10 +674,9 @@ public class DungeonImpl implements Dungeon {
         throw new IllegalArgumentException("The entered direction was invalid");
       }
 
-      if (player.getCurrentCave().getThief()) {
+      if (player.getPlayerCave().getThief()) {
         player.removeTreausuresWithPlayer();
         sb.append("The player encountered a thief and lost all it's treasures!! :(").append("\n");
-        //.out.println("size" + player.getTreasureList().size());
       }
 
       if (hasFallenIntoPit()) {
@@ -720,7 +687,7 @@ public class DungeonImpl implements Dungeon {
         sb.append("The entered direction was invalid").append("\n");
         return sb.toString();
       } else if (correctMove) {
-        sb.append("Player has moved successfully " + player.getCurrentCave().getCaveId()).append("\n");
+        sb.append("Player has moved successfully to ").append(player.getPlayerCave().getCaveId()).append("\n");
         if (this.getListOfCaves().get(movingMonsterCaveId).hasMovingMonster()) {
           this.getListOfCaves().get(movingMonsterCaveId).removeMovingMonster();
         }
@@ -736,8 +703,6 @@ public class DungeonImpl implements Dungeon {
         sb.append("Player is dead! Can't Move");
       }
     }
-
-
     return sb.toString();
   }
 
@@ -749,26 +714,26 @@ public class DungeonImpl implements Dungeon {
         listOfCavesMonster.add(listOfCave);
       }
     }
-    randomiser.shuffle(listOfCavesMonster);
+    randomiser.randomList(listOfCavesMonster);
     movingMonsterCaveId = randomiser.getRandom(0, listOfCavesMonster.size() - 1);
     listOfCavesMonster.get(movingMonsterCaveId).addMovingMonster();
     movingMonsterCaveId = listOfCavesMonster.get(movingMonsterCaveId).getCaveId();
 
   }
 
-  private String monsterCombat(StringBuilder sb) {
-    if (player.getCurrentCave().hasMovingMonster()) {
-      CaveCreature movingMonster = player.getCurrentCave().getMovingMonster();
+  private void monsterCombat(StringBuilder sb) {
+    if (player.getPlayerCave().hasMovingMonster()) {
+      sb.append("Player has to fight the moving monster!");
+      LocationMonster movingMonster = player.getPlayerCave().getMovingMonster();
       while (player.getHealth() > 0 && movingMonster.getHealth() > 0) {
         int random = this.randomiser.getRandom(0, 1) % 2;
         if (random == 0) {
           movingMonster.injure();
-          sb.append("Player has injured the monster. Monster left with health: "
-                  + movingMonster.getHealth()).append("\n");
+          sb.append("Player has injured the monster. Monster left with health: ").append(movingMonster.getHealth()).append("\n");
 
         } else {
           player.injure();
-          sb.append("Player has been injured. Remaining health:" + player.getHealth()).append("\n");
+          sb.append("Player has been injured. Remaining health:").append(player.getHealth()).append("\n");
         }
       }
       if (player.getHealth() <= 0) {
@@ -779,17 +744,16 @@ public class DungeonImpl implements Dungeon {
         sb.append("Moving Monster has been shot to death in the combat!!").append("\n");
       }
     }
-    return sb.toString();
   }
 
   private String checkMonster(StringBuilder sb) {
-    if (player.getCurrentCave().hasMonster()) {
-      if (player.getCurrentCave().getMonster().getHealth() == 100) {
+    if (player.getPlayerCave().hasMonster()) {
+      if (player.getPlayerCave().getMonster().getHealth() == 100) {
         player.killPlayer();
         sb.append("Oops there was a monster here. Eating the player chomp chomp chomp!!")
                 .append("\n");
 
-      } else if (player.getCurrentCave().getMonster().getHealth() == 50) {
+      } else if (player.getPlayerCave().getMonster().getHealth() == 50) {
         if (randomiser.getRandom(0, 1) % 2 == 1) {
           player.killPlayer();
           sb.append("Oops there was a monster here. Eating the player chomp chomp chomp!!")
@@ -804,9 +768,9 @@ public class DungeonImpl implements Dungeon {
   @Override
   public String playerToPickTreasure() {
     StringBuilder sb = new StringBuilder();
-    if (player.getCurrentCave().getTreasureList().size() > 0 && player.getPlayerLive()) {
-      player.pickTreasure(player.getCurrentCave().getTreasureList());
-      player.removeTreasure(player.getCurrentCave());
+    if (player.getPlayerCave().getTreasureList().size() > 0 && player.getPlayerLive()) {
+      player.pickTreasure(player.getPlayerCave().getTreasureList());
+      player.removeTreasure(player.getPlayerCave());
       sb.append("Player picked the treasures.").append("\n");
     } else if (!player.getPlayerLive()) {
       sb.append("Player is dead. Can't pick treasures.");
@@ -817,20 +781,15 @@ public class DungeonImpl implements Dungeon {
   }
 
   public void createCavesFinalList() {
-    for (Location listOfCave : listOfCaves) {
-      cavesFinalList.add(new Cave(listOfCave));
+    for (int i = 0; i < listOfCaves.size(); i++) {
+      cavesFinalList.add(new Cave(listOfCaves.get(i)));
     }
-//    for (int i = 0; i < cavesFinalList.size(); i++) {
-//      if (start.getCaveId() == cavesFinalList.get(i).getCaveId()) {
-//
-//      }
-//    }
   }
 
   @Override
   public String getPlayerDesc() {
     StringBuilder sb = new StringBuilder();
-    sb.append("Player is at " + player.getCurrentCave().getCaveId()).append("\n");
+    sb.append("Player is at ").append(player.getPlayerCave().getCaveId()).append("\n");
 
     if (player.getTreasureList().size() > 0) {
       sb.append("\nPlayer has the following treasures :").append("\n");
@@ -839,49 +798,37 @@ public class DungeonImpl implements Dungeon {
       }
     }
 
-//    if (this.getSmell() != Smell.NONE) {
-//      sb.append("Smell at the current cave is " + this.getSmell()).append("\n");
-//    }
-//
-//    if (this.getSoil()) {
-//      sb.append("There seems to be some soil nearby! Be careful!").append("\n");
-//    }
-
-    sb.append("Arrows with player: " + player.getArrowCount()).append("\n");
-//    sb.append("\nThe player can go to the following destinations :").append("\n");
-//    for (Map.Entry<Direction, Location> set : player.getCurrentCave().getCaveList().entrySet()) {
-//      sb.append(set.getKey().toString()).append("\n");
-//    }
+    sb.append("Arrows with player: ").append(player.getArrowCount()).append("\n");
     return sb.toString();
   }
 
   public String getLocationDesc() {
     StringBuilder sb = new StringBuilder();
     if (this.getSmell() != Smell.NONE) {
-      sb.append("Smell at the current cave is " + this.getSmell().toString()).append("\n");
+      sb.append("Smell at the current cave is ").append(this.getSmell().toString()).append("\n");
     }
 
     if (this.getSoil()) {
       sb.append("There seems to be some soil nearby! Be careful!").append("\n");
     }
 
-    if (player.getCurrentCave().getArrow() > 0) {
+    if (player.getPlayerCave().getArrow() > 0) {
       sb.append("Arrows are present in this cave.").append("\n");
     }
 
-    if (player.getCurrentCave().getTreasureList().size() > 0) {
+    if (player.getPlayerCave().getTreasureList().size() > 0) {
       sb.append("Wow this cave has treasures.").append("\n");
-      for (int i = 0; i < player.getCurrentCave().getTreasureList().size(); i++) {
-        sb.append(player.getCurrentCave().getTreasureList().get(i).toString()).append("\n");
+      for (int i = 0; i < player.getPlayerCave().getTreasureList().size(); i++) {
+        sb.append(player.getPlayerCave().getTreasureList().get(i).toString()).append("\n");
       }
     }
 
-    if (player.getCurrentCave().getThief()) {
+    if (player.getPlayerCave().getThief()) {
       sb.append("There is a thief in the cave, run!").append("\n");
     }
 
     sb.append("\nThe player can go to the following destinations :").append("\n");
-    for (Map.Entry<Direction, Location> set : player.getCurrentCave().getCaveList().entrySet()) {
+    for (Map.Entry<Direction, Location> set : player.getPlayerCave().getCaveList().entrySet()) {
       sb.append(set.getKey().toString()).append("\n");
     }
 
@@ -890,7 +837,7 @@ public class DungeonImpl implements Dungeon {
 
   @Override
   public boolean isTreasure() {
-    return (player.getCurrentCave().getTreasureList().size() > 0);
+    return (player.getPlayerCave().getTreasureList().size() > 0);
   }
 
   @Override
@@ -901,30 +848,30 @@ public class DungeonImpl implements Dungeon {
     for (int i = 0; i < listOfCaves.size(); i++) {
       sb.append("\n");
       if (listOfCaves.get(i).getLocationType() == LocationType.CAVE) {
-        sb.append("\nCave" + listOfCaves.get(i).getCaveId());
+        sb.append("\nCave").append(listOfCaves.get(i).getCaveId());
         sb.append("\nThis cave is connected to the :");
         for (Map.Entry<Direction, Location> entry : listOfCaves.get(i).getCaveList().entrySet()) {
           Direction k = entry.getKey();
           Location v = entry.getValue();
-          sb.append("\n" + k);
+          sb.append("\n").append(k);
           if (v.getLocationType() == LocationType.CAVE) {
-            sb.append(" Cave" + v.getCaveId());
+            sb.append(" Cave").append(v.getCaveId());
           } else {
-            sb.append(" Tunnel" + v.getCaveId());
+            sb.append(" Tunnel").append(v.getCaveId());
           }
         }
 
       } else {
-        sb.append("\nTunnel" + listOfCaves.get(i).getCaveId());
+        sb.append("\nTunnel").append(listOfCaves.get(i).getCaveId());
         sb.append("\nThis tunnel is connected to : ");
         for (Map.Entry<Direction, Location> entry : listOfCaves.get(i).getCaveList().entrySet()) {
           Direction k = entry.getKey();
           Location v = entry.getValue();
-          sb.append("\n" + k);
+          sb.append("\n").append(k);
           if (v.getLocationType() == LocationType.CAVE) {
-            sb.append(" Cave" + v.getCaveId());
+            sb.append(" Cave").append(v.getCaveId());
           } else {
-            sb.append(" Tunnel" + v.getCaveId());
+            sb.append(" Tunnel").append(v.getCaveId());
           }
 
         }

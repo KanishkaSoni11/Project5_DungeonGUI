@@ -31,7 +31,7 @@ public class FixedRandomiser implements Randomiser {
   }
 
   @Override
-  public <T> void shuffle(List<T> list) {
+  public <T> void randomList(List<T> list) {
     new ArrayList<T>(list);
   }
 }

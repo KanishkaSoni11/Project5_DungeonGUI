@@ -65,7 +65,7 @@ public class PlayerImpTest {
 
   @Test
   public void testGetCurrentCave() {
-    assertEquals(1, player.getCurrentCave().getCaveId());
+    assertEquals(1, player.getPlayerCave().getCaveId());
   }
 
   @Test
@@ -87,7 +87,7 @@ public class PlayerImpTest {
   @Test
   public void testMove() {
 
-    assertEquals(1, player.getCurrentCave().getCaveId());
+    assertEquals(1, player.getPlayerCave().getCaveId());
     player.move(Direction.EAST);
   }
 

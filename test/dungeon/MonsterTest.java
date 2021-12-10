@@ -3,7 +3,7 @@ package dungeon;
 import org.junit.Before;
 import org.junit.Test;
 
-import location.CaveCreature;
+import location.LocationMonster;
 import location.Monster;
 
 import static org.junit.Assert.assertEquals;
@@ -13,7 +13,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class MonsterTest {
 
-  private CaveCreature monster;
+  private LocationMonster monster;
 
   @Before
   public void setup() {

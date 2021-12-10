@@ -8,8 +8,6 @@ import java.util.List;
 
 import location.Cave;
 import location.Location;
-import randomiser.ActualRandomiser;
-import randomiser.Randomiser;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotEquals;
@@ -41,7 +39,7 @@ public class ActualRandomiserTest {
   @Test
   public void shuffle() {
     List<Location> unshuffledList = new ArrayList<>(caveList);
-    number1.shuffle(caveList);
+    number1.randomList(caveList);
     assertNotEquals(unshuffledList, caveList);
   }
 }

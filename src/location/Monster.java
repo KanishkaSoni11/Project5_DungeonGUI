@@ -3,7 +3,7 @@ package location;
 /**
  * Class to represent the Monster in the cave along with it's health.
  */
-public class Monster implements CaveCreature {
+public class Monster implements LocationMonster {
 
   private int health;
 
@@ -20,7 +20,7 @@ public class Monster implements CaveCreature {
    * @param monster object of monster
    * @throws IllegalArgumentException if the monster is null
    */
-  public Monster(CaveCreature monster) throws IllegalArgumentException {
+  public Monster(LocationMonster monster) throws IllegalArgumentException {
     if (monster == null) {
       throw new IllegalArgumentException("Monster cannot be null.");
     }

@@ -26,7 +26,7 @@ public interface Randomiser {
    * @param list list to be shuffled
    * @param <T>  Generic type for the list that has to be shuffled.
    */
-  public <T> void shuffle(List<T> list);
+  public <T> void randomList(List<T> list);
 
 
 }

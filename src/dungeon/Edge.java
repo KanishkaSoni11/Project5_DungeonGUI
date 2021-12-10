@@ -1,5 +1,10 @@
 package dungeon;
 
+/**
+ * code referred from
+ * https://www.techiedelight.com/kruskals-algorithm-for-finding-minimum-spanning-tree/
+ */
+
 class Edge {
   private int src;
   private int dest;
@@ -9,11 +14,6 @@ class Edge {
     this.src = src;
     this.dest = dest;
     this.weight = weight;
-  }
-
-  @Override
-  public String toString() {
-    return "(" + src + ", " + dest + ", " + weight + ")";
   }
 
   int getSrc() {

@@ -3,7 +3,7 @@ package location;
 /**
  * CaveCreature is the representation of the creatures that can be present in each cave.
  */
-public interface CaveCreature {
+public interface LocationMonster {
 
   /**
    * Method to reduce the health of the creature when it is shot.

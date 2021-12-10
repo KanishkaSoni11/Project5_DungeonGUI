@@ -6,7 +6,6 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,18 +41,12 @@ public class DungeonPanel extends JPanel {
     isVisited = new HashMap<>();
     arr = new HashMap<>();
     this.add(jPanel);
-    setDungeonPanel();
-
-    for (int i = 0; i < row * col; i++) {
-      isVisited.put(i, false);
-    }
-
   }
 
-  public void setDungeonPanel() {
+  public void setDungeonPanelBlack() {
     for (int i = 0; i < row * col; i++) {
       jLabel = new JLabel();
-      isVisited.put(i, false);
+      isVisited.put(i, true);
       try {
         BufferedImage icon = ImageIO.read((new File("img/blank.png")));
         jLabel.setIcon(new ImageIcon(icon));
@@ -68,14 +61,13 @@ public class DungeonPanel extends JPanel {
 
 
   public void showCaveDetails() {
-    System.out.println("Calling show cave details");
     this.remove(jPanel);
     jPanel = new JPanel();
     jPanel.setLayout(new GridLayout(row, col));
     jPanel.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
     arr.clear();
 
-    isVisited.put(model.getPlayer().getCurrentCave().getCaveId(), true);
+    isVisited.put(model.getPlayer().getPlayerCave().getCaveId(), true);
 
     for (Map.Entry<Integer, Boolean> set : isVisited.entrySet()) {
       jLabel = new JLabel();
@@ -109,7 +101,6 @@ public class DungeonPanel extends JPanel {
           if (model.getListOfCaves().get(set.getKey()).getTreasureList().contains(Treasure.SAPPHIRE)) {
             myPicture = overlay(myPicture, "img/emerald.png", 3);
           }
-          System.out.println(model.getListOfCaves().get(set.getKey()).getArrow());
           if (model.getListOfCaves().get(set.getKey()).getArrow() > 0) {
             myPicture = overlay(myPicture, "img/arrow-white.png", 4);
           }
@@ -129,7 +120,7 @@ public class DungeonPanel extends JPanel {
             myPicture = overlay(myPicture, "img/monster.png", 7);
           }
 
-          if (model.getPlayer().getCurrentCave().getCaveId() == set.getKey()) {
+          if (model.getPlayer().getPlayerCave().getCaveId() == set.getKey()) {
             myPicture = overlay(myPicture, "img/player.png", 8);
             if (model.getSmell().equals(Smell.HIGH)) {
               myPicture = overlay(myPicture, "img/stench02.png", 7);
@@ -177,9 +168,10 @@ public class DungeonPanel extends JPanel {
 
 
   public void addClickListenerDungeon(IDungeonController controller) {
-
-    for (Map.Entry<Direction, Location> locationEntry : model.getPlayer().getCurrentCave().getCaveList().entrySet()) {
-      arr.get(locationEntry.getValue().getCaveId()).addMouseListener(new MouseAdapter() {
+    for (Map.Entry<Direction, Location> locationEntry :
+            model.getPlayer().getPlayerCave().getCaveList().entrySet()) {
+      JLabel map = arr.get(locationEntry.getValue().getCaveId());
+      map.addMouseListener(new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {
           super.mouseClicked(e);
@@ -200,13 +192,17 @@ public class DungeonPanel extends JPanel {
 
   }
 
+  /**
+   * code referred from  -
+   * https://piazza.com/class/kt0jcw0x7h955a?cid=1500
+   */
 
   private BufferedImage overlay(BufferedImage starting, String image, int offset) throws
           IOException {
     BufferedImage overlay = ImageIO.read(new File(image));
-    int w = Math.max(starting.getWidth(), overlay.getWidth());
-    int h = Math.max(starting.getHeight(), overlay.getHeight());
-    BufferedImage combinedImg = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+    int width = Math.max(starting.getWidth(), overlay.getWidth());
+    int height = Math.max(starting.getHeight(), overlay.getHeight());
+    BufferedImage combinedImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
     Graphics g = combinedImg.getGraphics();
     g.drawImage(starting, 0, 0, null);
     g.drawImage(overlay, offset, offset, null);

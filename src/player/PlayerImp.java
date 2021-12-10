@@ -56,7 +56,6 @@ public class PlayerImp implements Player {
     this.name = player.getName();
     this.playerTreasureList = player.getTreasureList();
     this.cave = player.getStartCave();
-    System.out.println("Player " + player.getStartCave());
     this.playerAlive = player.getPlayerLive();
     this.arrowsWithPlayers = player.getArrowCount();
     this.health = player.getHealth();
@@ -68,7 +67,7 @@ public class PlayerImp implements Player {
   }
 
   @Override
-  public Location getCurrentCave() {
+  public Location getPlayerCave() {
     return new Cave(this.cave);
   }
 
@@ -82,7 +81,7 @@ public class PlayerImp implements Player {
     if (caveTreasureList == null) {
       throw new IllegalArgumentException("Treasure list cannot be null");
     }
-    playerTreasureList.addAll(this.getCurrentCave().getTreasureList());
+    playerTreasureList.addAll(this.getPlayerCave().getTreasureList());
 
   }
 
@@ -91,8 +90,8 @@ public class PlayerImp implements Player {
     if (directions == null) {
       throw new IllegalArgumentException("Direction cannot be null");
     }
-    if (getCurrentCave().getCaveList().containsKey(directions)) {
-      cave = getCurrentCave().getCaveList().get(directions);
+    if (getPlayerCave().getCaveList().containsKey(directions)) {
+      cave = getPlayerCave().getCaveList().get(directions);
       return true;
     }
     return false;
@@ -107,16 +106,21 @@ public class PlayerImp implements Player {
   }
 
   @Override
+  public void removeArrow(Location cave) throws IllegalArgumentException {
+    if (cave == null) {
+      throw new IllegalArgumentException("Cave cannot be null.");
+    }
+    this.cave.removeArrow();
+  }
+
+  @Override
   public int getArrowCount() {
     return this.arrowsWithPlayers;
   }
 
   @Override
   public void pickArrow() {
-    this.arrowsWithPlayers = this.arrowsWithPlayers + this.getCurrentCave().getArrow();
-    this.cave.removeArrow();
-    System.out.println("Playerrr" + this.cave.getArrow());
-    System.out.println("Caveee" + this.getCurrentCave());
+    this.arrowsWithPlayers = this.arrowsWithPlayers + this.getPlayerCave().getArrow();
   }
 
   @Override

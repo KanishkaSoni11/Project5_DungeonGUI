@@ -14,13 +14,12 @@ public class Cave implements Location {
 
   private final Map<Direction, Location> caveList;
   private List<Treasure> treasureList;
-  private boolean visited;
   private final int caveId;
   private int arrows;
-  private CaveCreature monster;
+  private LocationMonster monster;
   private boolean hasPit;
   private boolean hasThief;
-  private CaveCreature movingMonster;
+  private LocationMonster movingMonster;
 
   /**
    * Constructs the cave location based on the cave id given.
@@ -30,10 +29,9 @@ public class Cave implements Location {
    */
   public Cave(int caveId) throws IllegalArgumentException {
     if (caveId < 0) {
-      throw new IllegalArgumentException("Cave Id cannot be negative");
+      throw new IllegalArgumentException("Cave Id should be positive");
     }
     this.caveId = caveId;
-    this.visited = false;
     this.treasureList = new ArrayList<Treasure>();
     this.caveList = new TreeMap<Direction, Location>();
     this.monster = null;
@@ -56,7 +54,6 @@ public class Cave implements Location {
     this.caveList = cave.getCaveList();
     this.treasureList = cave.getTreasureList();
     this.caveId = cave.getCaveId();
-    this.visited = cave.isVisited();
     this.monster = cave.getMonster();
     this.arrows = cave.getArrow();
     this.hasPit = cave.getPit();
@@ -104,16 +101,6 @@ public class Cave implements Location {
   }
 
   @Override
-  public void updateVisit(boolean visit) {
-    this.visited = visit;
-  }
-
-  @Override
-  public boolean isVisited() {
-    return visited;
-  }
-
-  @Override
   public int getCaveId() {
     return caveId;
   }
@@ -128,7 +115,6 @@ public class Cave implements Location {
     arrows = this.arrows + number;
   }
 
-
   @Override
   public int getArrow() {
     return arrows;
@@ -136,9 +122,7 @@ public class Cave implements Location {
 
   @Override
   public void removeArrow() {
-    System.out.println("Removing");
     this.arrows = 0;
-    System.out.println("number " + arrows);
   }
 
   @Override
@@ -152,7 +136,7 @@ public class Cave implements Location {
   }
 
   @Override
-  public CaveCreature getMonster() {
+  public LocationMonster getMonster() {
     if (this.hasMonster()) {
       return new Monster(monster);
     }
@@ -192,7 +176,7 @@ public class Cave implements Location {
   }
 
   @Override
-  public CaveCreature getMovingMonster() {
+  public LocationMonster getMovingMonster() {
     if (this.hasMovingMonster()) {
       return new MovingMonster(movingMonster);
     }
@@ -209,12 +193,6 @@ public class Cave implements Location {
     this.movingMonster = null;
   }
 
-  @Override
-  public void hitMovingMonster() {
-    if (this.movingMonster.getHealth() > 0) {
-      this.movingMonster.injure();
-    }
-  }
 
 
 

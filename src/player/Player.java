@@ -23,7 +23,7 @@ public interface Player {
    *
    * @return location of the player
    */
-  Location getCurrentCave();
+  Location getPlayerCave();
 
   /**
    * Method to get the list of treasures that the player has picked from caves.
@@ -95,4 +95,6 @@ public interface Player {
   Location getStartCave();
 
   void resetPlayer();
+
+  void removeArrow(Location cave);
 }

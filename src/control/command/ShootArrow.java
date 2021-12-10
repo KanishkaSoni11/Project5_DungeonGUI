@@ -9,7 +9,7 @@ import location.Direction;
  * player to shoot the arrow in the given direction and at the given distance.
  */
 public class ShootArrow implements DungeonCommandController {
-  private int distance;
+  private String distance;
   private Direction direction;
 
   /**
@@ -18,7 +18,7 @@ public class ShootArrow implements DungeonCommandController {
    * @param distance  distance at which the arrow has to be shot.
    * @param direction direction in which the arrow has to be shot.
    */
-  public ShootArrow(int distance, Direction direction) {
+  public ShootArrow(String distance, Direction direction) {
     this.direction = direction;
     this.distance = distance;
   }
@@ -32,6 +32,8 @@ public class ShootArrow implements DungeonCommandController {
     try {
       if (dungeon.getPlayer().getArrowCount() > 0) {
         sb.append(dungeon.shootArrow(distance, direction));
+      }else {
+        sb.append("Player is not left with any arrows.");
       }
     } catch (IllegalArgumentException exception) {
       sb.append(exception.getMessage());

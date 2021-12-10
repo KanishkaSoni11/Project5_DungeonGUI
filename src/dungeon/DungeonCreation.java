@@ -1,16 +1,21 @@
 package dungeon;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * code referred from
+ * https://www.techiedelight.com/kruskals-algorithm-for-finding-minimum-spanning-tree/
+ */
+
 class DungeonCreation {
-  private Map<Integer, Integer> parent;
-  private List<Edge> edges;
-  private int n;
+
+  private final Map<Integer, Integer> parent;
+  private final List<Edge> edges;
+  private final int n;
 
   DungeonCreation(List<Edge> edges, int n) {
     this.edges = edges;
@@ -38,11 +43,11 @@ class DungeonCreation {
   }
 
   List<Edge> kruskalAlgo() {
-    List<Edge> mst = new ArrayList();
+    List<Edge> mst = new ArrayList<>();
     makeSet();
 
     int index = 0;
-    Collections.sort(edges, Comparator.comparingInt(e -> e.getWeight()));
+    edges.sort(Comparator.comparingInt(Edge::getWeight));
 
     while (mst.size() != n - 1) {
       Edge next_edge = edges.get(index++);

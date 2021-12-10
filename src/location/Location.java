@@ -60,14 +60,14 @@ public interface Location {
    *
    * @param visit visit status to be updated
    */
-  void updateVisit(boolean visit);
+  //void updateVisit(boolean visit);
 
   /**
    * Returns if the location is visited or not.
    *
    * @return true or false based on the visit status
    */
-  boolean isVisited();
+ // boolean isVisited();
 
   /**
    * Method to remove the treasures of a particular cave.
@@ -110,30 +110,57 @@ public interface Location {
    *
    * @return monster in the cave
    */
-  CaveCreature getMonster();
+  LocationMonster getMonster();
 
   /**
    * Method to reduce the health of the monster when the monster is shot by the player.
    */
   void hitMonster();
 
+  /**
+   * Method to add pit to the cave.
+   */
   void setPit();
 
+  /**
+   * Method to check if the location has a pit or not.
+   * @return true or false depending on the presence of the pit
+   */
   boolean getPit();
 
+  /**
+   * Method to add thief to the location.
+   */
   void addThief();
 
+  /**
+   * Method to check if the thief is present at the location or not.
+   * @return true or false depending on the presence of the thief
+   */
   boolean getThief();
 
+  /**
+   * Method to add moving monster to the location.
+   */
   void addMovingMonster();
 
+  /**
+   * Method to check if the moving monster is present at the cave or not.
+   * @return true or false depending on the presence of the moving monster
+   */
   boolean hasMovingMonster();
 
+  /**
+   * Method to remove the moving monster from the location.
+   */
   void removeMovingMonster();
 
-  CaveCreature getMovingMonster();
+  /**
+   * Method to get the object of the moving monster at the location.
+   * @return object of the moving monster
+   */
+  LocationMonster getMovingMonster();
 
-  void hitMovingMonster();
 
 
 
